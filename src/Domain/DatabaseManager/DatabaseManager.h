@@ -9,12 +9,14 @@
 #include "../Process/Process.h"
 #include "../../Util/Logger/Logger.h"
 #include "../../Util/Cola/Cola.h"
+#include "../../Util/MemoriaCompartida/MemoriaCompartida.h"
 
 class DatabaseManager : Process {
 public:
     DatabaseManager();
     void start();
 private:
+    MemoriaCompartida<int> clientIdShMem;
     int save(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery);
     int update(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery);
     int retrieve(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery);

@@ -6,6 +6,14 @@
 
 DatabaseManager::DatabaseManager() : Process() {
     Logger::logger().log("DatabaseManager Initialized");
+
+    if (clientIdShMem.crear(SHARED_MEM_CLIENT_ID, 'L') != SHM_OK){
+        string error = "Error creating Client Id Shared Mem";
+        perror(error.c_str());
+        Logger::logger().log(error);
+    }
+
+    clientIdShMem.escribir(1);
 }
 
 void DatabaseManager::start() {
@@ -41,6 +49,7 @@ void DatabaseManager::start() {
     Logger::logger().log("DatabaseManager Quit");
     msgQueueQueries.destruir();
     msgQueueResponses.destruir();
+    clientIdShMem.liberar();
 }
 
 int DatabaseManager::save(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery) {

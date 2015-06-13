@@ -11,12 +11,15 @@
 #include "../Process/Process.h"
 #include "../../Util/Logger/Logger.h"
 #include "../../Util/Cola/Cola.h"
+#include "../../Util/MemoriaCompartida/MemoriaCompartida.h"
 
 class Client : Process {
 public:
     Client();
     void start();
 private:
+    MemoriaCompartida<int> clientIdShMem;
+    LockFile clientIdLock = LockFile(SHARED_MEM_CLIENT_ID);
     int clientId;
     int save(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow);
     int update(Cola<dbQuery_t> msgQueue, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow);

@@ -5,13 +5,23 @@
 #include "Client.h"
 
 Client::Client() : Process() {
-    clientId = 1;
+    if (clientIdShMem.crear(SHARED_MEM_CLIENT_ID, 'L') != SHM_OK){
+        string error = "Error creating Client Id Shared Mem";
+        perror(error.c_str());
+        Logger::logger().log(error);
+    }
+
+
+    clientIdLock.tomarLockWr();
+    clientId = clientIdShMem.leer();
+    clientIdShMem.escribir(clientId + 1);
+    clientIdLock.liberarLock();
 
     Logger::logger().log("Client " + to_string(clientId) + " Initialized");
 }
 
 void Client::start() {
-    Logger::logger().log("Client Running");
+    Logger::logger().log("Client " + to_string(clientId) + " Running");
 
     const std::string QUERIES_FILE = MSG_QUEUE_QUERIES_NAME;
     Cola<dbQuery_t> msgQueueQueries(QUERIES_FILE, 'a' );
@@ -35,7 +45,7 @@ void Client::start() {
     save(msgQueueQueries, msgQueueResponses, entryRow);
 
     // GracefulQuit
-    Logger::logger().log("Client Quit");
+    Logger::logger().log("Client " + to_string(clientId) + " Quit");
 }
 
 int Client::save(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow) {
@@ -48,21 +58,21 @@ int Client::save(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueRes
 
     int result = msgQueueQueries.escribir(dbQuery);
     if (result < 0) {
-        Logger::logger().log("Client Error Saving/Query");
+        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Query");
         return -1;
     }
 
     dbResponse_t dbResponse;
     result = msgQueueResponses.leer(clientId, &dbResponse);
     if (result < 0) {
-        Logger::logger().log("Client Error Saving/Response");
+        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Response");
         return -1;
     }
 
     if (dbResponse.result < 0)
-        Logger::logger().log("Client Error Saving/DB");
+        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/DB");
     else
-        Logger::logger().log("Client Saving Successful");
+        Logger::logger().log("Client " + to_string(clientId) + " Saving Successful");
 
     return 0;
 }

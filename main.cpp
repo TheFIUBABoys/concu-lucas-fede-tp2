@@ -11,6 +11,8 @@ void createTempfiles() {//Creating temp lock files
     myfile.close();
     myfile.open(MSG_QUEUE_RESPONSES_NAME);
     myfile.close();
+    myfile.open(SHARED_MEM_CLIENT_ID);
+    myfile.close();
 }
 
 int main() {
