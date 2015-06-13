@@ -5,14 +5,19 @@
 #include "Client.h"
 
 Client::Client() : Process() {
-    Logger::logger().log("Client Initialized");
+    clientId = 1;
+
+    Logger::logger().log("Client " + to_string(clientId) + " Initialized");
 }
 
 void Client::start() {
     Logger::logger().log("Client Running");
 
-    const std::string ARCHIVO = MSG_QUEUE_NAME;
-    Cola<dbAction_t> msgQueue ( ARCHIVO, 1 );
+    const std::string QUERIES_FILE = MSG_QUEUE_QUERIES_NAME;
+    Cola<dbQuery_t> msgQueueQueries(QUERIES_FILE, 'a' );
+
+    const std::string RESPONSES_FILE = MSG_QUEUE_RESPONSES_NAME;
+    Cola<dbResponse_t> msgQueueResponses(RESPONSES_FILE, 'a' );
 
     string nombre1 = "Foo";
     string direccion1 = "Avenida del Foo";
@@ -27,38 +32,55 @@ void Client::start() {
     strcpy(entryRow.direccion, direccion1.c_str());
     strcpy(entryRow.telefono, telefono1.c_str());
 
-    save(entryRow);
+    save(msgQueueQueries, msgQueueResponses, entryRow);
 
     // GracefulQuit
     Logger::logger().log("Client Quit");
-    msgQueue.destruir();
 }
 
-int Client::save(entryRow_t entryRow) {
-    Logger::logger().log("Client Saving");
+int Client::save(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow) {
+    Logger::logger().log("Client " + to_string(clientId) + " Saving");
 
-    dbAction_t dbAction;
-    dbAction.mtype = DB_QUERY;
-    dbAction.entryRow = entryRow;
-    dbAction.action = SAVE;
+    dbQuery_t dbQuery;
+    dbQuery.mtype = clientId;
+    dbQuery.entryRow = entryRow;
+    dbQuery.action = SAVE;
+
+    int result = msgQueueQueries.escribir(dbQuery);
+    if (result < 0) {
+        Logger::logger().log("Client Error Saving/Query");
+        return -1;
+    }
+
+    dbResponse_t dbResponse;
+    result = msgQueueResponses.leer(clientId, &dbResponse);
+    if (result < 0) {
+        Logger::logger().log("Client Error Saving/Response");
+        return -1;
+    }
+
+    if (dbResponse.result < 0)
+        Logger::logger().log("Client Error Saving/DB");
+    else
+        Logger::logger().log("Client Saving Successful");
 
     return 0;
 }
 
-int Client::update(entryRow_t entryRow) {
-    Logger::logger().log("Client Updating");
+int Client::update(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow) {
+    Logger::logger().log("Client " + to_string(clientId) + " Updating");
     return 0;
 }
 
-entryRow_t Client::retrieve(char nombre[61]) {
-    Logger::logger().log("Client Retrieving");
+entryRow_t Client::retrieve(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, char nombre[61]) {
+    Logger::logger().log("Client " + to_string(clientId) + " Retrieving");
 
     entryRow_t entryRow;
 
     return entryRow;
 }
 
-int Client::deleteEntry(char nombre[61]) {
-    Logger::logger().log("Client Deleting");
+int Client::deleteEntry(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, char nombre[61]) {
+    Logger::logger().log("Client " + to_string(clientId) + " Deleting");
     return 0;
 }

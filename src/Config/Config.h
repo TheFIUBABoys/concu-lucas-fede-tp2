@@ -6,7 +6,8 @@
 #define CONCUTP_CONFIG_H
 
 #define LOG_FILE    "/home/fede/ClionProjects/concu-lucas-fede/log.txt"
-#define MSG_QUEUE_NAME    "MsgQueue"
+#define MSG_QUEUE_QUERIES_NAME    "MsgQueueQueries"
+#define MSG_QUEUE_RESPONSES_NAME    "MsgQueueResponses"
 
 #include <string>
 

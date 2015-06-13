@@ -5,9 +5,6 @@
 #ifndef CONCU_LUCAS_FEDE_TP2_ENTRYROW_H
 #define CONCU_LUCAS_FEDE_TP2_ENTRYROW_H
 
-#define DB_QUERY    1
-#define DB_RESPONSE 2
-
 #define SAVE    0
 #define UPDATE  1
 #define RETRIEVE    2
@@ -19,11 +16,16 @@ typedef struct entryRow {
     char telefono[13];
 } entryRow_t;
 
-typedef struct dbAction {
+typedef struct dbQuery {
     long mtype;
     int action;
     char nombre[61];
     entryRow_t entryRow;
-} dbAction_t;
+} dbQuery_t;
+
+typedef struct dbResponse {
+    long mtype;
+    int result;
+} dbResponse_t;
 
 #endif //CONCU_LUCAS_FEDE_TP2_ENTRYROW_H

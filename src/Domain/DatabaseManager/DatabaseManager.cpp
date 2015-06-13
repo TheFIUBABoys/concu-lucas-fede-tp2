@@ -11,44 +11,68 @@ DatabaseManager::DatabaseManager() : Process() {
 void DatabaseManager::start() {
     Logger::logger().log("DatabaseManager Running");
 
-    const std::string ARCHIVO = MSG_QUEUE_NAME;
-    Cola<dbAction_t> msgQueue ( ARCHIVO, 1 );
+    const std::string QUERIES_FILE = MSG_QUEUE_QUERIES_NAME;
+    Cola<dbQuery_t> msgQueueQueries(QUERIES_FILE, 'a' );
 
-    dbAction_t dbAction;
-    msgQueue.leer(0, &dbAction);
+    const std::string RESPONSES_FILE = MSG_QUEUE_RESPONSES_NAME;
+    Cola<dbResponse_t> msgQueueResponses(RESPONSES_FILE, 'a' );
 
-    switch (dbAction.action){
+    dbQuery_t dbQuery;
+    msgQueueQueries.leer(0, &dbQuery);
+
+    switch (dbQuery.action){
         case SAVE:
-            save(dbAction.entryRow);
+            save(msgQueueResponses, dbQuery);
             break;
         case UPDATE:
-            update(dbAction.entryRow);
+            update(msgQueueResponses, dbQuery);
             break;
         case RETRIEVE:
-            retrieve(dbAction.nombre);
+            retrieve(msgQueueResponses, dbQuery);
             break;
         case DELETE:
-            deleteEntry(dbAction.nombre);
+            deleteEntry(msgQueueResponses, dbQuery);
             break;
     }
 
+    sleep(5);
+
     // GracefulQuit
     Logger::logger().log("DatabaseManager Quit");
-    msgQueue.destruir();
+    msgQueueQueries.destruir();
+    msgQueueResponses.destruir();
 }
 
-void DatabaseManager::save(entryRow_t entryRow) {
-    Logger::logger().log("DatabaseManager Saving");
+int DatabaseManager::save(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery) {
+    Logger::logger().log("DatabaseManager Saving for client " + to_string(dbQuery.mtype));
+
+    dbResponse_t dbResponse;
+    dbResponse.mtype = dbQuery.mtype;
+    dbResponse.result = 0;
+
+    int result = msgQueueResponses.escribir(dbResponse);
+    if (result < 0) {
+        Logger::logger().log("DatabaseManager Response Error");
+        return -1;
+    }
+
+    return 0;
 }
 
-void DatabaseManager::update(entryRow_t entryRow) {
-    Logger::logger().log("DatabaseManager Updating");
+int DatabaseManager::update(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery) {
+    Logger::logger().log("DatabaseManager Updating for client " + to_string(dbQuery.mtype));
+
+    return 0;
 }
 
-void DatabaseManager::retrieve(char nombre[61]) {
-    Logger::logger().log("DatabaseManager Retrieving");
+int DatabaseManager::retrieve(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery) {
+    Logger::logger().log("DatabaseManager Retrieving for client " + to_string(dbQuery.mtype));
+
+    return 0;
 }
 
-void DatabaseManager::deleteEntry(char nombre[61]) {
-    Logger::logger().log("DatabaseManager Deleting");
+int DatabaseManager::deleteEntry(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery) {
+    Logger::logger().log("DatabaseManager Deleting for client " + to_string(dbQuery.mtype));
+
+    return 0;
 }

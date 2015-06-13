@@ -15,10 +15,10 @@ public:
     DatabaseManager();
     void start();
 private:
-    void save(entryRow_t entryRow);
-    void update(entryRow_t entryRow);
-    void retrieve(char nombre[61]);
-    void deleteEntry(char nombre[61]);
+    int save(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery);
+    int update(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery);
+    int retrieve(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery);
+    int deleteEntry(Cola<dbResponse_t> msgQueueResponses, dbQuery_t dbQuery);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_DATABASEMANAGER_H
