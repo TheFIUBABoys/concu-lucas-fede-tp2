@@ -35,8 +35,6 @@ void DatabaseManager::start() {
         case DELETE:
             deleteEntry(dbQuery);
             break;
-        default:
-            break;
     }
 
     sleep(5);

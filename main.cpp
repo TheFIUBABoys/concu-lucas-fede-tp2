@@ -15,21 +15,38 @@ void createTempfiles() {//Creating temp lock files
     myfile.close();
 }
 
-int testSave(Client& client){
+int testSave(Client &client) {
+    return -1;
+}
 
+int testUpdate(Client &client) {
+    return -1;
+}
+
+int testDelete(Client &client) {
+    return -1;
+}
+
+int testGet(Client &client) {
+    return -1;
 }
 
 
 int main() {
-    cout << "Hello, World!" << endl;
     createTempfiles();
-
     if (fork() == 0) {
         Client client = Client();
-        client.start();
+        testSave(client) < 0 ? Logger::logger().log("TEST SAVE FAILED") : Logger::logger().log("TEST SAVE OK");
+        testGet(client) < 0 ? Logger::logger().log("TEST GET FAILED") : Logger::logger().log("TEST GET OK");
+        testDelete(client) < 0 ? Logger::logger().log("TEST DELETE FAILED") : Logger::logger().log("TEST DELETE OK");
+        testUpdate(client) < 0 ? Logger::logger().log("TEST UPDATE FAILED") : Logger::logger().log("TEST UPDATE OK");
+        Logger::logger().log("Exiting client");
+
     } else {
         DatabaseManager dbManager = DatabaseManager();
-        dbManager.start();
+        //dbManager.start();
+        Logger::logger().log("Exiting server");
+
     }
 
     return 0;
