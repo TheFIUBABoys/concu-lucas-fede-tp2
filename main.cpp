@@ -36,15 +36,18 @@ int main() {
     createTempfiles();
     if (fork() == 0) {
         Client client = Client();
-        testSave(client) < 0 ? Logger::logger().log("TEST SAVE FAILED") : Logger::logger().log("TEST SAVE OK");
-        testGet(client) < 0 ? Logger::logger().log("TEST GET FAILED") : Logger::logger().log("TEST GET OK");
-        testDelete(client) < 0 ? Logger::logger().log("TEST DELETE FAILED") : Logger::logger().log("TEST DELETE OK");
-        testUpdate(client) < 0 ? Logger::logger().log("TEST UPDATE FAILED") : Logger::logger().log("TEST UPDATE OK");
+        //testSave(client) < 0 ? Logger::logger().log("TEST SAVE FAILED") : Logger::logger().log("TEST SAVE OK");
+        //testGet(client) < 0 ? Logger::logger().log("TEST GET FAILED") : Logger::logger().log("TEST GET OK");
+        //testDelete(client) < 0 ? Logger::logger().log("TEST DELETE FAILED") : Logger::logger().log("TEST DELETE OK");
+        //testUpdate(client) < 0 ? Logger::logger().log("TEST UPDATE FAILED") : Logger::logger().log("TEST UPDATE OK");
+
+        client.start();
+
         Logger::logger().log("Exiting client");
 
     } else {
         DatabaseManager dbManager = DatabaseManager();
-        //dbManager.start();
+        dbManager.start();
         Logger::logger().log("Exiting server");
 
     }

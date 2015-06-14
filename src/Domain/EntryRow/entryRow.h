@@ -10,10 +10,14 @@
 #define RETRIEVE    2
 #define DELETE  3
 
+#define NOMBRE_SIZE 61
+#define DIRECCION_SIZE 120
+#define TELEFONO_SIZE 13
+
 typedef struct entryRow {
-    char nombre[61];
-    char direccion[120];
-    char telefono[13];
+    char nombre[NOMBRE_SIZE];
+    char direccion[DIRECCION_SIZE];
+    char telefono[TELEFONO_SIZE];
 } entryRow_t;
 
 typedef struct dbQuery {
