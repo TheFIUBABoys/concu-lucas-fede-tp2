@@ -11,7 +11,6 @@ Client::Client() : Process() {
         Logger::logger().log(error);
     }
 
-
     clientIdLock.tomarLockWr();
     clientId = clientIdShMem.leer();
     clientIdShMem.escribir(clientId + 1);
@@ -22,12 +21,6 @@ Client::Client() : Process() {
 
 void Client::start() {
     Logger::logger().log("Client " + to_string(clientId) + " Running");
-
-    const std::string QUERIES_FILE = MSG_QUEUE_QUERIES_NAME;
-    Cola<dbQuery_t> msgQueueQueries(QUERIES_FILE, 'a' );
-
-    const std::string RESPONSES_FILE = MSG_QUEUE_RESPONSES_NAME;
-    Cola<dbResponse_t> msgQueueResponses(RESPONSES_FILE, 'a' );
 
     string nombre1 = "Foo";
     string direccion1 = "Avenida del Foo";
@@ -42,13 +35,13 @@ void Client::start() {
     strcpy(entryRow.direccion, direccion1.c_str());
     strcpy(entryRow.telefono, telefono1.c_str());
 
-    save(msgQueueQueries, msgQueueResponses, entryRow);
+    save(entryRow);
 
     // GracefulQuit
     Logger::logger().log("Client " + to_string(clientId) + " Quit");
 }
 
-int Client::save(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow) {
+int Client::save(entryRow_t entryRow) {
     Logger::logger().log("Client " + to_string(clientId) + " Saving");
 
     dbQuery_t dbQuery;
@@ -77,12 +70,12 @@ int Client::save(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueRes
     return 0;
 }
 
-int Client::update(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow) {
+int Client::update(entryRow_t entryRow) {
     Logger::logger().log("Client " + to_string(clientId) + " Updating");
     return 0;
 }
 
-entryRow_t Client::retrieve(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, char nombre[61]) {
+entryRow_t Client::retrieve(char nombre[61]) {
     Logger::logger().log("Client " + to_string(clientId) + " Retrieving");
 
     entryRow_t entryRow;
@@ -90,7 +83,7 @@ entryRow_t Client::retrieve(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> 
     return entryRow;
 }
 
-int Client::deleteEntry(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, char nombre[61]) {
+int Client::deleteEntry(char nombre[61]) {
     Logger::logger().log("Client " + to_string(clientId) + " Deleting");
     return 0;
 }

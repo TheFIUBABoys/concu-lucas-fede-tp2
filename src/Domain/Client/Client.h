@@ -18,13 +18,15 @@ public:
     Client();
     void start();
 private:
+    Cola<dbQuery_t> msgQueueQueries = Cola<dbQuery_t>(MSG_QUEUE_QUERIES_NAME, 'a' );
+    Cola<dbResponse_t> msgQueueResponses = Cola<dbResponse_t>(MSG_QUEUE_RESPONSES_NAME, 'a' );
     MemoriaCompartida<int> clientIdShMem;
     LockFile clientIdLock = LockFile(SHARED_MEM_CLIENT_ID);
     int clientId;
-    int save(Cola<dbQuery_t> msgQueueQueries, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow);
-    int update(Cola<dbQuery_t> msgQueue, Cola<dbResponse_t> msgQueueResponses, entryRow_t entryRow);
-    entryRow_t retrieve(Cola<dbQuery_t> msgQueue, Cola<dbResponse_t> msgQueueResponses, char nombre[61]);
-    int deleteEntry(Cola<dbQuery_t> msgQueue, Cola<dbResponse_t> msgQueueResponses, char nombre[61]);
+    int save(entryRow_t entryRow);
+    int update(entryRow_t entryRow);
+    entryRow_t retrieve(char nombre[61]);
+    int deleteEntry(char nombre[61]);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_CLIENT_H
