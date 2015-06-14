@@ -35,6 +35,8 @@ void DatabaseManager::start() {
         case DELETE:
             deleteEntry(dbQuery);
             break;
+        default:
+            break;
     }
 
     sleep(5);
@@ -49,7 +51,7 @@ void DatabaseManager::start() {
 int DatabaseManager::save(dbQuery_t dbQuery) {
     Logger::logger().log("DatabaseManager Saving for client " + to_string(dbQuery.mtype));
 
-    // TODO
+    // TODO: Inicializar persona en base a entry row; guardar en archivo
 
     dbResponse_t dbResponse;
     dbResponse.mtype = dbQuery.mtype;

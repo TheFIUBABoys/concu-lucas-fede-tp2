@@ -15,6 +15,11 @@ void createTempfiles() {//Creating temp lock files
     myfile.close();
 }
 
+int testSave(Client& client){
+
+}
+
+
 int main() {
     cout << "Hello, World!" << endl;
     createTempfiles();

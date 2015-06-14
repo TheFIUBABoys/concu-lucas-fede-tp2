@@ -2,7 +2,9 @@
 // Created by fede on 13/06/15.
 //
 
+#include <string.h>
 #include "Client.h"
+#include "../../Exception/InvalidParamsException.h"
 
 Client::Client() : Process() {
     if (clientIdShMem.crear(SHARED_MEM_CLIENT_ID, 'L') != SHM_OK){
@@ -22,36 +24,37 @@ Client::Client() : Process() {
 void Client::start() {
     Logger::logger().log("Client " + to_string(clientId) + " Running");
 
-    string nombre1 = "Foo";
-    string direccion1 = "Avenida del Foo";
-    string telefono1 = "3-14159-2653";
+    Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
+    Persona persona2 = Persona("Bar","Avenida del Bar","2-7182-8182");
 
-    string nombre2 = "Bar";
-    string direccion2 = "Avenida del Bar";
-    string telefono2 = "2-7182-8182";
-
-    entryRow_t entryRow;
-    strcpy(entryRow.nombre, nombre1.c_str());
-    strcpy(entryRow.direccion, direccion1.c_str());
-    strcpy(entryRow.telefono, telefono1.c_str());
-
-    save(entryRow);
+    save(persona1);
+    save(persona2);
 
     // GracefulQuit
     Logger::logger().log("Client " + to_string(clientId) + " Quit");
 }
 
-int Client::save(entryRow_t entryRow) {
+
+entryRow_t entryRowFromPersona(Persona& persona){
+    entryRow_t entryRow;
+    strcpy(entryRow.direccion, persona.getDireccion().c_str());
+    strcpy(entryRow.nombre, persona.getNombre().c_str());
+    strcpy(entryRow.telefono, persona.getTelefono().c_str());
+    return entryRow;
+}
+
+
+int Client::save(Persona& persona) {
     Logger::logger().log("Client " + to_string(clientId) + " Saving");
 
     dbQuery_t dbQuery;
     dbQuery.mtype = clientId;
-    dbQuery.entryRow = entryRow;
+    dbQuery.entryRow = entryRowFromPersona(persona);
     dbQuery.action = SAVE;
 
     int result = msgQueueQueries.escribir(dbQuery);
     if (result < 0) {
-        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Query");
+        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Persona");
         return -1;
     }
 
@@ -70,20 +73,34 @@ int Client::save(entryRow_t entryRow) {
     return 0;
 }
 
-int Client::update(entryRow_t entryRow) {
-    Logger::logger().log("Client " + to_string(clientId) + " Updating");
-    return 0;
+Persona Client::updateByName(string name) {
+    Logger::logger().log("Client " +  to_string(clientId) + " updating name " + name);
+    Persona persona = personaWithName(name);
+
+    //TODO - Update in from manager
+    //Return updated persona
+    return Persona("Err","Err","Err");
 }
 
-entryRow_t Client::retrieve(char nombre[61]) {
-    Logger::logger().log("Client " + to_string(clientId) + " Retrieving");
+Persona Client::getByName(string name) {
+    Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name );
+    Persona persona = personaWithName(name);
 
-    entryRow_t entryRow;
-
-    return entryRow;
+    //TODO - Get from manager
+    return Persona("Err","Err","Err");
 }
 
-int Client::deleteEntry(char nombre[61]) {
-    Logger::logger().log("Client " + to_string(clientId) + " Deleting");
-    return 0;
+//Returns deleted persona
+Persona Client::deleteByName(string name) {
+    Logger::logger().log("Client " + to_string(clientId) + " Deleting name " + name);
+
+    Persona persona = personaWithName(name);
+    //TODO - Get from manager
+    return Persona("Err","Err","Err");
+
+}
+
+//Throws InvalidParamsException if name is invalid
+Persona Client::personaWithName(string &name) {
+    return Persona(name, "", "");
 }
