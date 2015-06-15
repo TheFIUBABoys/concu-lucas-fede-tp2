@@ -6,8 +6,8 @@
 #define CONCU_LUCAS_FEDE_TP2_ENTRYROW_H
 
 #define SAVE    0
-#define UPDATE  1
-#define RETRIEVE    2
+#define RETRIEVE    1
+#define UPDATE  2
 #define DELETE  3
 
 #define NOMBRE_SIZE 61
@@ -29,6 +29,7 @@ typedef struct dbQuery {
 
 typedef struct dbResponse {
     long mtype;
+    char value[NOMBRE_SIZE + DIRECCION_SIZE + TELEFONO_SIZE];
     int result;
 } dbResponse_t;
 

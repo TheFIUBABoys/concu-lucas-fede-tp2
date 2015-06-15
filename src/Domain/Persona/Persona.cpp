@@ -3,7 +3,6 @@
 //
 
 #include "Persona.h"
-#include "../../Exception/InvalidParamsException.h"
 
 #define MAX_NOMBRE 61
 #define MAX_DIR 120
@@ -49,4 +48,23 @@ Persona::Persona(string nombre, string direccion, string telefono) {
    setNombre(nombre);
    setDireccion(direccion);
    setTelefono(telefono);
+}
+
+string Persona::getStringRepresentation() {
+   string nombreTmp = string(this->nombre);
+   string direccionTmp = string(this->direccion);
+   string telefonoTmp = string(this->telefono);
+   MixedUtils::padTo(nombreTmp, NOMBRE_SIZE - 1);
+   MixedUtils::padTo(direccionTmp, DIRECCION_SIZE - 1);
+   MixedUtils::padTo(telefonoTmp, TELEFONO_SIZE - 1);
+
+   return nombreTmp + direccionTmp + telefonoTmp;
+}
+
+Persona Persona::buildFromString(string data) {
+   string nombre = data.substr(0, NOMBRE_SIZE - 1);
+   string direccion = data.substr(NOMBRE_SIZE, DIRECCION_SIZE - 1);
+   string telefono = data.substr(NOMBRE_SIZE + DIRECCION_SIZE, TELEFONO_SIZE - 1);
+
+   return Persona(nombre, direccion, telefono);
 }

@@ -2,9 +2,7 @@
 // Created by fede on 13/06/15.
 //
 
-#include <string.h>
 #include "Client.h"
-#include "../../Exception/InvalidParamsException.h"
 
 Client::Client() : Process() {
     if (clientIdShMem.crear(SHARED_MEM_CLIENT_ID, 'L') != SHM_OK){
@@ -28,7 +26,9 @@ void Client::start() {
     Persona persona2 = Persona("Bar","Avenida del Bar","2-7182-8182");
 
     save(persona1);
-    save(persona2);
+    //save(persona2);
+
+    getByName( string("Foo") );
 
     // GracefulQuit
     Logger::logger().log("Client " + to_string(clientId) + " Quit");
@@ -40,6 +40,7 @@ entryRow_t entryRowFromPersona(Persona& persona){
     strcpy(entryRow.direccion, persona.getDireccion().c_str());
     strcpy(entryRow.nombre, persona.getNombre().c_str());
     strcpy(entryRow.telefono, persona.getTelefono().c_str());
+
     return entryRow;
 }
 
@@ -54,7 +55,7 @@ int Client::save(Persona& persona) {
 
     int result = msgQueueQueries.escribir(dbQuery);
     if (result < 0) {
-        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Persona");
+        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Query");
         return -1;
     }
 
@@ -73,20 +74,44 @@ int Client::save(Persona& persona) {
     return 0;
 }
 
+Persona Client::getByName(string name) {
+    Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name );
+    Persona persona = personaWithName(name);
+
+    dbQuery_t dbQuery;
+    dbQuery.mtype = clientId;
+    strcpy(dbQuery.nombre, name.c_str());
+    dbQuery.action = RETRIEVE;
+
+    int result = msgQueueQueries.escribir(dbQuery);
+    if (result < 0) {
+        Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/Query");
+        return Persona("Err","Err","Err");
+    }
+
+    dbResponse_t dbResponse;
+    result = msgQueueResponses.leer(clientId, &dbResponse);
+    if (result < 0) {
+        Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/Response");
+        return Persona("Err","Err","Err");
+    }
+
+    if (dbResponse.result < 0)
+        Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/DB");
+    else {
+        Logger::logger().log("Client " + to_string(clientId) + " Retrieve Successful");
+        Logger::logger().log("Client " + to_string(clientId) + " Retrieve " + dbResponse.value);
+    }
+
+    return Persona("Err","Err","Err");
+}
+
 Persona Client::updateByName(string name) {
     Logger::logger().log("Client " +  to_string(clientId) + " updating name " + name);
     Persona persona = personaWithName(name);
 
     //TODO - Update in from manager
     //Return updated persona
-    return Persona("Err","Err","Err");
-}
-
-Persona Client::getByName(string name) {
-    Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name );
-    Persona persona = personaWithName(name);
-
-    //TODO - Get from manager
     return Persona("Err","Err","Err");
 }
 

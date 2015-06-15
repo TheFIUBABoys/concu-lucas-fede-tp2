@@ -2,7 +2,6 @@
 // Created by fede on 13/06/15.
 //
 
-#include <fstream>
 #include "DatabaseManager.h"
 
 DatabaseManager::DatabaseManager() : Process() {
@@ -30,11 +29,11 @@ void DatabaseManager::start() {
             case SAVE:
                 save(dbQuery);
                 break;
-            case UPDATE:
-                update(dbQuery);
-                break;
             case RETRIEVE:
                 retrieve(dbQuery);
+                break;
+            case UPDATE:
+                update(dbQuery);
                 break;
             case DELETE:
                 deleteEntry(dbQuery);
@@ -49,27 +48,15 @@ void DatabaseManager::start() {
     clientIdShMem.liberar();
 }
 
-void padTo(std::string &str, const size_t num, const char paddingChar = ' ')
-{
-    if(num > str.size())
-        str.insert(str.size(), num - str.size(), paddingChar);
-}
-
 int DatabaseManager::save(dbQuery_t dbQuery) {
     Logger::logger().log("DatabaseManager Saving for client " + to_string(dbQuery.mtype));
 
-    string nombre = string(dbQuery.entryRow.nombre);
-    string direccion = string(dbQuery.entryRow.direccion);
-    string telefono = string(dbQuery.entryRow.telefono);
-    padTo(nombre, NOMBRE_SIZE - 1);
-    padTo(direccion, DIRECCION_SIZE - 1);
-    padTo(telefono, TELEFONO_SIZE - 1);
-    string entryRowLine = nombre + direccion + telefono;
-    cout << entryRowLine << endl;
+    entryRow_t entryRow = dbQuery.entryRow;
+    Persona persona = Persona(entryRow.nombre, entryRow.direccion, entryRow.telefono);
 
     ofstream persistenceFile;
     persistenceFile.open(PERSISTENCE_FILE, fstream::app);
-    persistenceFile << entryRowLine << endl;
+    persistenceFile << persona.getStringRepresentation() << endl;
     persistenceFile.close();
 
     dbResponse_t dbResponse;
@@ -85,14 +72,39 @@ int DatabaseManager::save(dbQuery_t dbQuery) {
     return 0;
 }
 
-int DatabaseManager::update(dbQuery_t dbQuery) {
-    Logger::logger().log("DatabaseManager Updating for client " + to_string(dbQuery.mtype));
+int DatabaseManager::retrieve(dbQuery_t dbQuery) {
+    Logger::logger().log("DatabaseManager Retrieving for client " + to_string(dbQuery.mtype));
+
+    dbResponse_t dbResponse;
+    dbResponse.mtype = dbQuery.mtype;
+    dbResponse.result = -1;
+
+    string line;
+    string nombreRetrieve = string(dbQuery.nombre);
+    MixedUtils::padTo(nombreRetrieve, NOMBRE_SIZE - 1);
+    ifstream persistenceFile(PERSISTENCE_FILE);
+    if (persistenceFile.is_open()) {
+        while (getline(persistenceFile, line)) {
+            if (line.compare(0, NOMBRE_SIZE - 1, nombreRetrieve) == 0) {
+                strcpy(dbResponse.value, line.c_str());
+                dbResponse.result = 0;
+                break;
+            }
+        }
+        persistenceFile.close();
+    }
+
+    int result = msgQueueResponses.escribir(dbResponse);
+    if (result < 0) {
+        Logger::logger().log("DatabaseManager Response Error");
+        return -1;
+    }
 
     return 0;
 }
 
-int DatabaseManager::retrieve(dbQuery_t dbQuery) {
-    Logger::logger().log("DatabaseManager Retrieving for client " + to_string(dbQuery.mtype));
+int DatabaseManager::update(dbQuery_t dbQuery) {
+    Logger::logger().log("DatabaseManager Updating for client " + to_string(dbQuery.mtype));
 
     return 0;
 }

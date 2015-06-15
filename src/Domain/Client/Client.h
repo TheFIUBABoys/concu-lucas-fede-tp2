@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <string>
+#include <string.h>
+#include "../../Exception/InvalidParamsException.h"
 #include "../../Domain/EntryRow/entryRow.h"
 #include "../Process/Process.h"
 #include "../../Util/Logger/Logger.h"

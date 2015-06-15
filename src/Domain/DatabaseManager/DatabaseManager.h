@@ -5,11 +5,15 @@
 #ifndef CONCU_LUCAS_FEDE_TP2_DATABASEMANAGER_H
 #define CONCU_LUCAS_FEDE_TP2_DATABASEMANAGER_H
 
+#include <fstream>
+#include <string.h>
+#include "../Persona/Persona.h"
 #include "../../Domain/EntryRow/entryRow.h"
 #include "../Process/Process.h"
 #include "../../Util/Logger/Logger.h"
 #include "../../Util/Cola/Cola.h"
 #include "../../Util/MemoriaCompartida/MemoriaCompartida.h"
+#include "../../Util/MixedUtils.h"
 
 class DatabaseManager : Process {
 public:
