@@ -26,9 +26,10 @@ void Client::start() {
     Persona persona2 = Persona("Bar","Avenida del Bar","2-7182-8182");
 
     save(persona1);
-    //save(persona2);
+    save(persona2);
 
-    getByName( string("Foo") );
+    getByName( persona1.getNombre() );
+    getByName( persona2.getNombre() );
 
     // GracefulQuit
     Logger::logger().log("Client " + to_string(clientId) + " Quit");
@@ -76,7 +77,6 @@ int Client::save(Persona& persona) {
 
 Persona Client::getByName(string name) {
     Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name );
-    Persona persona = personaWithName(name);
 
     dbQuery_t dbQuery;
     dbQuery.mtype = clientId;
@@ -101,6 +101,7 @@ Persona Client::getByName(string name) {
     else {
         Logger::logger().log("Client " + to_string(clientId) + " Retrieve Successful");
         Logger::logger().log("Client " + to_string(clientId) + " Retrieve " + dbResponse.value);
+        return Persona::buildFromString(dbResponse.value);
     }
 
     return Persona("Err","Err","Err");
@@ -120,7 +121,7 @@ Persona Client::deleteByName(string name) {
     Logger::logger().log("Client " + to_string(clientId) + " Deleting name " + name);
 
     Persona persona = personaWithName(name);
-    //TODO - Get from manager
+    //TODO - Delete from manager
     return Persona("Err","Err","Err");
 
 }

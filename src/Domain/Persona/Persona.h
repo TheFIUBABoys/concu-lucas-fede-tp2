@@ -14,7 +14,7 @@ using namespace std;
 class Persona {
 public:
     Persona(string nombre, string direccion, string telefono);
-    Persona buildFromString(string data);
+    static Persona buildFromString(string data);
     void setNombre(string nombre);
     void setTelefono(string telefono);
     void setDireccion(string direccion);
