@@ -22,14 +22,14 @@ Client::Client() : Process() {
 void Client::start() {
     Logger::logger().log("Client " + to_string(clientId) + " Running");
 
-    Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
+    /*Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
     Persona persona2 = Persona("Bar","Avenida del Bar","2-7182-8182");
 
     save(persona1);
     save(persona2);
 
     getByName( persona1.getNombre() );
-    getByName( persona2.getNombre() );
+    getByName( persona2.getNombre() );*/
 
     // GracefulQuit
     Logger::logger().log("Client " + to_string(clientId) + " Quit");
@@ -45,9 +45,11 @@ entryRow_t entryRowFromPersona(Persona& persona){
     return entryRow;
 }
 
-
 int Client::save(Persona& persona) {
     Logger::logger().log("Client " + to_string(clientId) + " Saving");
+
+    if (checkDBManager() == false)
+        return -1;
 
     dbQuery_t dbQuery;
     dbQuery.mtype = clientId;
@@ -78,6 +80,11 @@ int Client::save(Persona& persona) {
 Persona Client::getByName(string name) {
     Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name );
 
+    Persona personaError = Persona("Err","Err","Err");
+
+    if (checkDBManager() == false)
+        return personaError;
+
     dbQuery_t dbQuery;
     dbQuery.mtype = clientId;
     strcpy(dbQuery.nombre, name.c_str());
@@ -107,26 +114,16 @@ Persona Client::getByName(string name) {
     return Persona("Err","Err","Err");
 }
 
-Persona Client::updateByName(string name) {
-    Logger::logger().log("Client " +  to_string(clientId) + " updating name " + name);
-    Persona persona = personaWithName(name);
-
-    //TODO - Update in from manager
-    //Return updated persona
-    return Persona("Err","Err","Err");
-}
-
-//Returns deleted persona
-Persona Client::deleteByName(string name) {
-    Logger::logger().log("Client " + to_string(clientId) + " Deleting name " + name);
-
-    Persona persona = personaWithName(name);
-    //TODO - Delete from manager
-    return Persona("Err","Err","Err");
-
-}
-
 //Throws InvalidParamsException if name is invalid
 Persona Client::personaWithName(string &name) {
     return Persona(name, "", "");
+}
+
+bool Client::checkDBManager() {
+    if (msgQueueQueries.creadoCorrectamente() == false || msgQueueResponses.creadoCorrectamente() == false) {
+        Logger::logger().log("Client " + to_string(clientId) + " - Error: el DB Manager no esta levantado ");
+        return false;
+    }
+
+    return true;
 }

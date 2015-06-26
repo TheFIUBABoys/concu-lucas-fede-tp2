@@ -21,9 +21,7 @@ public:
     Client();
     void start();
     int save(Persona& persona);
-    Persona updateByName(string name);
     Persona getByName(string name);
-    Persona deleteByName(string name);
 
 private:
     Cola<dbQuery_t> msgQueueQueries = Cola<dbQuery_t>(MSG_QUEUE_QUERIES_NAME, 'a' );
@@ -31,6 +29,7 @@ private:
     MemoriaCompartida<int> clientIdShMem;
     LockFile clientIdLock = LockFile(SHARED_MEM_CLIENT_ID);
     int clientId;
+    bool checkDBManager();
     Persona personaWithName(string &name);
 };
 

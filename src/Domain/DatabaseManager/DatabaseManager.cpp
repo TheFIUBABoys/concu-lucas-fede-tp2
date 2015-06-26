@@ -32,12 +32,6 @@ void DatabaseManager::start() {
             case RETRIEVE:
                 retrieve(dbQuery);
                 break;
-            case UPDATE:
-                update(dbQuery);
-                break;
-            case DELETE:
-                deleteEntry(dbQuery);
-                break;
         }
     }
 
@@ -46,6 +40,14 @@ void DatabaseManager::start() {
     msgQueueQueries.destruir();
     msgQueueResponses.destruir();
     clientIdShMem.liberar();
+
+    deleteTempfiles();
+}
+
+void DatabaseManager::deleteTempfiles() {//Creating temp lock files
+    remove(MSG_QUEUE_QUERIES_NAME);
+    remove(MSG_QUEUE_RESPONSES_NAME);
+    remove(SHARED_MEM_CLIENT_ID);
 }
 
 int DatabaseManager::save(dbQuery_t dbQuery) {
@@ -99,18 +101,6 @@ int DatabaseManager::retrieve(dbQuery_t dbQuery) {
         Logger::logger().log("DatabaseManager Response Error");
         return -1;
     }
-
-    return 0;
-}
-
-int DatabaseManager::update(dbQuery_t dbQuery) {
-    Logger::logger().log("DatabaseManager Updating for client " + to_string(dbQuery.mtype));
-
-    return 0;
-}
-
-int DatabaseManager::deleteEntry(dbQuery_t dbQuery) {
-    Logger::logger().log("DatabaseManager Deleting for client " + to_string(dbQuery.mtype));
 
     return 0;
 }

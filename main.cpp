@@ -15,37 +15,47 @@ void createTempfiles() {//Creating temp lock files
     myfile.close();
 }
 
-int testSave(Client &client) {
-    return -1;
+bool testSave(Client &client) {
+    remove(PERSISTENCE_FILE);   // Reset persistence
+
+    Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
+
+    client.save(persona1);
+
+    string line;
+    ifstream persistenceFile(PERSISTENCE_FILE);
+    getline(persistenceFile, line);
+
+    return (persona1.getStringRepresentation().compare(line) == 0);
 }
 
-int testUpdate(Client &client) {
-    return -1;
-}
+bool testRetrieve(Client &client) {
+    remove(PERSISTENCE_FILE);   // Reset persistence
 
-int testDelete(Client &client) {
-    return -1;
-}
+    Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
 
-int testGet(Client &client) {
-    return -1;
+    client.save(persona1);
+
+    Persona personaRetrieved = client.getByName(persona1.getNombre());
+
+    return (persona1.getStringRepresentation().compare( personaRetrieved.getStringRepresentation() ) == 0);
 }
 
 
 int main() {
-    createTempfiles();
     if (fork() == 0) {
+        sleep(2);   // Simular que el cliente se abre despues que el dbManager
         Client client = Client();
-        //testSave(client) < 0 ? Logger::logger().log("TEST SAVE FAILED") : Logger::logger().log("TEST SAVE OK");
-        //testGet(client) < 0 ? Logger::logger().log("TEST GET FAILED") : Logger::logger().log("TEST GET OK");
-        //testDelete(client) < 0 ? Logger::logger().log("TEST DELETE FAILED") : Logger::logger().log("TEST DELETE OK");
-        //testUpdate(client) < 0 ? Logger::logger().log("TEST UPDATE FAILED") : Logger::logger().log("TEST UPDATE OK");
+        testSave(client) ? Logger::logger().log("TEST SAVE OK") : Logger::logger().log("TEST SAVE FAILED");
+        testRetrieve(client) ? Logger::logger().log("TEST RETRIEVE OK") : Logger::logger().log("TEST RETRIEVE FAILED");
 
         client.start();
 
         Logger::logger().log("Exiting client");
 
     } else {
+        createTempfiles();
+
         DatabaseManager dbManager = DatabaseManager();
         dbManager.start();
         Logger::logger().log("Exiting server");

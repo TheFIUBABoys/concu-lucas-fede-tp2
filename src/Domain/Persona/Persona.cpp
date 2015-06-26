@@ -63,8 +63,12 @@ string Persona::getStringRepresentation() {
 
 Persona Persona::buildFromString(string data) {
    string nombre = data.substr(0, NOMBRE_SIZE - 1);
-   string direccion = data.substr(NOMBRE_SIZE, DIRECCION_SIZE - 1);
-   string telefono = data.substr(NOMBRE_SIZE + DIRECCION_SIZE, TELEFONO_SIZE - 1);
+   string direccion = data.substr(NOMBRE_SIZE - 1, DIRECCION_SIZE - 1);
+   string telefono = data.substr(NOMBRE_SIZE + DIRECCION_SIZE - 2, TELEFONO_SIZE - 1);
+
+   nombre = MixedUtils::rtrim(nombre);
+   direccion = MixedUtils::rtrim(direccion);
+   telefono = MixedUtils::rtrim(telefono);
 
    return Persona(nombre, direccion, telefono);
 }

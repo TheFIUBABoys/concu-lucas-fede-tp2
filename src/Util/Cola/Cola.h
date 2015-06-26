@@ -18,6 +18,7 @@ template <class T> class Cola {
 		int escribir ( const T& dato ) const;
 		int leer ( const int tipo,T* buffer ) const;
 		int destruir () const;
+		bool creadoCorrectamente() const;
 };
 
 template <class T> Cola<T> :: Cola ( const std::string& archivo,const char letra ) {
@@ -43,6 +44,10 @@ template <class T> int Cola<T> :: escribir ( const T& dato ) const {
 	if (resultado < 0)
 		perror ( "Error en escribir cola" );
 	return resultado;
+}
+
+template <class T> bool Cola<T> :: creadoCorrectamente() const {
+	return (this->clave != -1);
 }
 
 template <class T> int Cola<T> :: leer ( const int tipo,T* buffer ) const {

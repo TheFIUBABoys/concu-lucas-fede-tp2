@@ -7,9 +7,12 @@
 
 #include <string>
 
+using namespace std;
+
 class MixedUtils {
 public:
     static void padTo(std::string &str, const size_t num, const char paddingChar = ' ');
+    static string rtrim(std::string &str);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_MIXEDUTILS_H
