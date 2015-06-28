@@ -5,8 +5,14 @@
 #include "Client.h"
 
 Client::Client() : Process() {
-    clientId = getpid();
-    Logger::logger().log("Client " + to_string(clientId) + " Initialized");
+    try {
+        msgQueueQueries = Cola<dbQuery_t>(MSG_QUEUE_QUERIES_NAME, 'a');
+        msgQueueResponses = Cola<dbResponse_t>(MSG_QUEUE_RESPONSES_NAME, 'a');
+        clientId = getpid();
+        Logger::logger().log("Client " + to_string(clientId) + " Initialized");
+    }catch (MessageQueueException e){
+        Logger::logger().log("Error initializing client:  " + to_string(clientId) + e.what());
+    }
 }
 
 

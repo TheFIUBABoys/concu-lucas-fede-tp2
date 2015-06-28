@@ -5,7 +5,13 @@
 #include "DatabaseManager.h"
 
 DatabaseManager::DatabaseManager() : Process() {
-    Logger::logger().log("DatabaseManager Initialized with pid " + to_string(getpid()));
+    try {
+        msgQueueQueries = Cola<dbQuery_t>(MSG_QUEUE_QUERIES_NAME, 'a');
+        msgQueueResponses = Cola<dbResponse_t>(MSG_QUEUE_RESPONSES_NAME, 'a');
+        Logger::logger().log("DatabaseManager Initialized with pid " + to_string(getpid()));
+    }catch (MessageQueueException e){
+        Logger::logger().log("Error initializing manager:  " + string(e.what()));
+    }
 }
 
 void DatabaseManager::start() {

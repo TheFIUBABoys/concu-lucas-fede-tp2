@@ -22,8 +22,8 @@ public:
     Persona getByName(string name);
 
 private:
-    Cola<dbQuery_t> msgQueueQueries = Cola<dbQuery_t>(MSG_QUEUE_QUERIES_NAME, 'a' );
-    Cola<dbResponse_t> msgQueueResponses = Cola<dbResponse_t>(MSG_QUEUE_RESPONSES_NAME, 'a' );
+    Cola<dbQuery_t> msgQueueQueries;
+    Cola<dbResponse_t> msgQueueResponses;
     int clientId;
     bool checkDBManager();
     Persona personaWithName(string &name);

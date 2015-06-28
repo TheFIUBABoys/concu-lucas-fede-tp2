@@ -11,10 +11,14 @@
 template<class T>
 class Cola {
 private:
+
+
     key_t clave;
     int id;
 
 public:
+    Cola();
+
     Cola(const std::string &archivo, const char letra);
 
     ~Cola();
@@ -37,6 +41,11 @@ Cola<T>::Cola(const std::string &archivo, const char letra) {
     this->id = msgget(this->clave, 0666 | IPC_CREAT);
     if (this->id == -1)
         throw MessageQueueException("Error en msgget");
+}
+
+//To avoid initialization errors
+template<class T>
+Cola<T>::Cola() {
 }
 
 template<class T>
