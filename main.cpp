@@ -1,13 +1,21 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <wait.h>
 #include "src/Domain/Client/Client.h"
 #include "src/Domain/DatabaseManager/DatabaseManager.h"
 #include "src/Exception/DBException/DBException.h"
 
 using namespace std;
 
-void createTempfiles() {//Creating temp lock files
+typedef enum ConcurrentTestResult {
+    ConcurrentTestResultOK,
+    ConcurrentTestResultError,
+    ConcurrentTestResultChild
+} ProcessType;
+
+void createTempfiles() {
+    //Creating temp lock files
     ofstream myfile;
     myfile.open(MSG_QUEUE_QUERIES_NAME);
     myfile.close();
@@ -39,7 +47,7 @@ bool testSaveWithSameName(Client &client) {
     Persona persona2 = Persona("Foo", "Avenidaasd del Foo", "3-149-2653");
     ClientResponse response = client.save(persona2);
     Logger::logger().debug = true;
-    return response==ClientResponseRepeated;
+    return response == ClientResponseRepeated;
 }
 
 bool testRetrieve(Client &client) {
@@ -60,7 +68,7 @@ bool testRetrieveNotFound(Client &client) {
         Persona personaRetrieved = client.getByName(persona1.getNombre());
         Logger::logger().debug = true;
         return false;
-    }catch (DBException e){
+    } catch (DBException e) {
         Logger::logger().debug = true;
         return true;
     }
@@ -91,6 +99,38 @@ bool testBulkSaveAndRetrieve(Client &client) {
     return success;
 }
 
+ConcurrentTestResult testConcurrentSaves() {
+    Logger::logger().debug = false;
+    remove(PERSISTENCE_FILE);   // Reset persistence
+
+    int processes = 100;
+    for (int i = 0; i < processes; i++) {
+        __pid_t pid = fork();
+        if (pid == 0) {
+            Client client = Client();
+            Persona persona1 = Persona("Foo" + to_string(i), "Avenida del Foo" + to_string(i), to_string(i));
+            client.save(persona1);
+            return ConcurrentTestResultChild;
+        }
+    }
+    for (int i = 0; i < processes; i++) {
+        wait(NULL);
+    }
+
+    bool success = true;
+    for (int i = 0; i < processes; i++) {
+        Client client = Client();
+        try{
+            client.getByName("Foo" + to_string(i));
+        }catch(DBException e){
+            success = false;
+            break;
+        }
+    }
+    Logger::logger().debug = true;
+    return success ? ConcurrentTestResultOK : ConcurrentTestResultError;
+}
+
 
 //Tests
 int main() {
@@ -98,10 +138,24 @@ int main() {
         sleep(1);   // Simular que el cliente se abre despues que el dbManager
         Client client = Client();
         testSave(client) ? Logger::logger().log("TEST SAVE OK") : Logger::logger().log("TEST SAVE FAILED");
-        testSaveWithSameName(client) ? Logger::logger().log("TEST SAVE REPEATED OK") : Logger::logger().log("TEST SAVE REPEATED FAILED");
+        testSaveWithSameName(client) ? Logger::logger().log("TEST SAVE REPEATED OK") : Logger::logger().log(
+                "TEST SAVE REPEATED FAILED");
         testRetrieve(client) ? Logger::logger().log("TEST RETRIEVE OK") : Logger::logger().log("TEST RETRIEVE FAILED");
-        testRetrieveNotFound(client) ? Logger::logger().log("TEST RETRIEVE NOT FOUND OK") : Logger::logger().log("TEST RETRIEVE NOT FOUND FAILED");
-        testBulkSaveAndRetrieve(client) ? Logger::logger().log("TEST BULK RETRIEVE OK") : Logger::logger().log("TEST BULK RETRIEVE FAILED");
+        testRetrieveNotFound(client) ? Logger::logger().log("TEST RETRIEVE NOT FOUND OK") : Logger::logger().log(
+                "TEST RETRIEVE NOT FOUND FAILED");
+        testBulkSaveAndRetrieve(client) ? Logger::logger().log("TEST BULK RETRIEVE OK") : Logger::logger().log(
+                "TEST BULK RETRIEVE FAILED");
+        ConcurrentTestResult concurrentTestResult = testConcurrentSaves();
+        if (concurrentTestResult==ConcurrentTestResultOK){
+            Logger::logger().log("TEST CONCURRENT SAVES OK");
+        }else{
+            if (concurrentTestResult==ConcurrentTestResultError){
+                Logger::logger().log("TEST CONCURRENT SAVES FAILED");
+            }else{
+                //Childs
+                return 0;
+            }
+        }
         Logger::logger().log("Exiting client");
     } else {
         Logger::logger().debug = false;
