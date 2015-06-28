@@ -3,6 +3,7 @@
 #include <vector>
 #include "src/Domain/Client/Client.h"
 #include "src/Domain/DatabaseManager/DatabaseManager.h"
+#include "src/Exception/DBException/DBException.h"
 
 using namespace std;
 
@@ -29,6 +30,7 @@ bool testSave(Client &client) {
     return (persona1 == persona2);
 }
 
+
 bool testSaveWithSameName(Client &client) {
     Logger::logger().debug = false;
     remove(PERSISTENCE_FILE);   // Reset persistence
@@ -48,6 +50,20 @@ bool testRetrieve(Client &client) {
     Persona personaRetrieved = client.getByName(persona1.getNombre());
     Logger::logger().debug = true;
     return (persona1 == personaRetrieved);
+}
+
+bool testRetrieveNotFound(Client &client) {
+    Logger::logger().debug = false;
+    remove(PERSISTENCE_FILE);   // Reset persistence
+    Persona persona1 = Persona("Foo", "Avenida del Foo", "3-1459-2653");
+    try {
+        Persona personaRetrieved = client.getByName(persona1.getNombre());
+        Logger::logger().debug = true;
+        return false;
+    }catch (DBException e){
+        Logger::logger().debug = true;
+        return true;
+    }
 }
 
 bool testBulkSaveAndRetrieve(Client &client) {
@@ -84,6 +100,7 @@ int main() {
         testSave(client) ? Logger::logger().log("TEST SAVE OK") : Logger::logger().log("TEST SAVE FAILED");
         testSaveWithSameName(client) ? Logger::logger().log("TEST SAVE REPEATED OK") : Logger::logger().log("TEST SAVE REPEATED FAILED");
         testRetrieve(client) ? Logger::logger().log("TEST RETRIEVE OK") : Logger::logger().log("TEST RETRIEVE FAILED");
+        testRetrieveNotFound(client) ? Logger::logger().log("TEST RETRIEVE NOT FOUND OK") : Logger::logger().log("TEST RETRIEVE NOT FOUND FAILED");
         testBulkSaveAndRetrieve(client) ? Logger::logger().log("TEST BULK RETRIEVE OK") : Logger::logger().log("TEST BULK RETRIEVE FAILED");
         Logger::logger().log("Exiting client");
     } else {

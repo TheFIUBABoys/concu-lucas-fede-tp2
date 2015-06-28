@@ -53,7 +53,7 @@ int DatabaseManager::save(dbQuery_t dbQuery) {
     dbQuery_t testQuery = dbQuery;
     testQuery.action = RETRIEVE;
     strcpy(testQuery.nombre, dbQuery.entryRow.nombre);
-    dbResponse_t retrieveResult = retrieveQuery(testQuery);
+    dbResponse_t retrieveResult = retrieveQuery(testQuery, true);
     if (retrieveResult.result == ResponseTypeAlreadyExists){
         //Entry already exists
         Logger::logger().log("DatabaseManager attempted to insert repeated entry");
@@ -91,7 +91,7 @@ int DatabaseManager::save(dbQuery_t dbQuery) {
 
 int DatabaseManager::retrieveByName(dbQuery_t dbQuery) {
     Logger::logger().log("DatabaseManager Retrieving for client " + to_string(dbQuery.mtype));
-    dbResponse_t dbResponse = retrieveQuery(dbQuery);
+    dbResponse_t dbResponse = retrieveQuery(dbQuery, false);
 
     int result = msgQueueResponses.escribir(dbResponse);
     if (result < 0) {
@@ -102,10 +102,10 @@ int DatabaseManager::retrieveByName(dbQuery_t dbQuery) {
     return 0;
 }
 
-dbResponse_t DatabaseManager::retrieveQuery(dbQuery_t &dbQuery) {
+dbResponse_t DatabaseManager::retrieveQuery(dbQuery_t &dbQuery, bool isInsert) {
     dbResponse_t dbResponse;
     dbResponse.mtype = dbQuery.mtype;
-    dbResponse.result = ResponseTypeOK;
+    dbResponse.result = ResponseTypeError;
     string line;
     string nombreRetrieve = string(dbQuery.nombre);
     MixedUtils::padTo(nombreRetrieve, NOMBRE_SIZE - 1);
@@ -114,7 +114,11 @@ dbResponse_t DatabaseManager::retrieveQuery(dbQuery_t &dbQuery) {
         while (getline(persistenceFile, line)) {
             if (line.compare(0, NOMBRE_SIZE - 1, nombreRetrieve) == 0) {
                 strcpy(dbResponse.value, line.c_str());
-                dbResponse.result = ResponseTypeAlreadyExists;
+                if (isInsert) {
+                    dbResponse.result = ResponseTypeAlreadyExists;
+                } else {
+                    dbResponse.result = ResponseTypeOK;
+                }
                 break;
             }
         }

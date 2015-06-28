@@ -25,7 +25,7 @@ private:
     int retrieveByName(dbQuery_t dbQuery);
 
     void deleteTempfiles();
-    dbResponse_t retrieveQuery(dbQuery_t &dbQuery);
+    dbResponse_t retrieveQuery(dbQuery_t &dbQuery, bool isInsert);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_DATABASEMANAGER_H
