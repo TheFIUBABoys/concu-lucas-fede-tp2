@@ -14,6 +14,8 @@
 #include "../../Util/Logger/Logger.h"
 #include "../../Util/Cola/Cola.h"
 #include "../Persona/Persona.h"
+#include "../../Util/Seniales/SIGINT_Handler.h"
+#include "../../Util/Seniales/SignalHandler.h"
 
 typedef enum ClientResponse{
     ClientResponseOK,
@@ -21,7 +23,7 @@ typedef enum ClientResponse{
     ClientResponseRepeated
 
 } ClientResponse;
-class Client : Process {
+class Client {
 public:
     Client();
     ClientResponse save(Persona& persona);
@@ -32,6 +34,7 @@ private:
     Cola<dbResponse_t> msgQueueResponses;
     int clientId;
     bool checkDBManager();
+    int handleSignal(int signum);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_CLIENT_H

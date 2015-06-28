@@ -132,10 +132,42 @@ ConcurrentTestResult testConcurrentSaves() {
 }
 
 
+void clienteInteractivo() {
+    remove(PERSISTENCE_FILE);   // Reset persistence
+
+    Client client = Client();   // Se crea cliente
+
+    // Se declaran algunas personas para guardar
+    Persona persona1 = Persona("Foo", "Avenida del Foo", "3-14159-2653");
+    Persona persona2 = Persona("Bar", "Avenida del Bar", "2-71828-1828");
+    Persona persona3 = Persona("Baz", "Avenida del Baz", "1-61803-3988");
+
+
+    client.save(persona1);  // Se guarda la persona 1
+    client.save(persona3);  // Se guarda la persona 3
+
+    // Se corrobora que no se pueda encontrar la persona 2
+    try {
+        Persona personaRetrieved = client.getByName(persona2.getNombre());
+    } catch (DBException e) {
+        Logger::logger().log("Persona 2 no encontrada");
+    }
+
+    // Se hace un retrieve para la persona 1
+    Persona personaRetrieved = client.getByName(persona1.getNombre());
+    if (personaRetrieved == persona1) {
+        Logger::logger().log("Persona1 encontrada");
+    }
+
+}
+
 //Tests
 int main() {
     if (fork() == 0) {
         sleep(1);   // Simular que el cliente se abre despues que el dbManager
+
+        // clienteInteractivo();
+
         Client client = Client();
         testSave(client) ? Logger::logger().log("TEST SAVE OK") : Logger::logger().log("TEST SAVE FAILED");
         testSaveWithSameName(client) ? Logger::logger().log("TEST SAVE REPEATED OK") : Logger::logger().log(
@@ -168,6 +200,3 @@ int main() {
     }
     return 0;
 }
-
-
-//Tests

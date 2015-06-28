@@ -5,11 +5,24 @@
 #include "Client.h"
 #include "../../Exception/DBException/DBException.h"
 
-Client::Client() : Process() {
+int Client::handleSignal(int signum){
+    if (signum==SIGINT) {
+        Logger::logger().log("Client Received signal " + to_string(signum));
+        msgQueueQueries.destruir();
+        msgQueueResponses.destruir();
+
+        exit(0);
+    }
+}
+
+Client::Client() {
     try {
         msgQueueQueries = Cola<dbQuery_t>(MSG_QUEUE_QUERIES_NAME, 'a');
         msgQueueResponses = Cola<dbResponse_t>(MSG_QUEUE_RESPONSES_NAME, 'a');
         clientId = getpid();
+
+        //signal(SIGINT, handleSignal);
+
         Logger::logger().log("Client " + to_string(clientId) + " Initialized");
     } catch (MessageQueueException e) {
         Logger::logger().log("Error initializing client:  " + to_string(clientId) + e.what());

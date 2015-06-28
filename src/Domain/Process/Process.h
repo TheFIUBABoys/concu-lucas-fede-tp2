@@ -6,6 +6,7 @@
 #define CONCUTP_PROCESS_H
 
 #include "../../Util/Seniales/SIGINT_Handler.h"
+#include "../../Util/Seniales/SignalHandler.h"
 
 class Process {
 public:
