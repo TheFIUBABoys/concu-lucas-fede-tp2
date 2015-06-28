@@ -29,7 +29,7 @@ void DatabaseManager::start() {
                 save(dbQuery);
                 break;
             case RETRIEVE:
-                retrieve(dbQuery);
+                retrieveByName(dbQuery);
                 break;
             default:
                 break;
@@ -49,7 +49,24 @@ void DatabaseManager::deleteTempfiles() {//Creating temp lock files
 }
 
 int DatabaseManager::save(dbQuery_t dbQuery) {
-    Logger::logger().log("DatabaseManager Saving for client " + to_string(dbQuery.mtype));
+    Logger::logger().log("DatabaseManager saving for client " + to_string(dbQuery.mtype));
+    dbQuery_t testQuery = dbQuery;
+    testQuery.action = RETRIEVE;
+    strcpy(testQuery.nombre, dbQuery.entryRow.nombre);
+    dbResponse_t retrieveResult = retrieveQuery(testQuery);
+    if (retrieveResult.result == ResponseTypeAlreadyExists){
+        //Entry already exists
+        Logger::logger().log("DatabaseManager attempted to insert repeated entry");
+        dbResponse_t dbResponse;
+        dbResponse.mtype = dbQuery.mtype;
+        strcpy(dbResponse.value, retrieveResult.value);
+        dbResponse.result = ResponseTypeAlreadyExists;
+        int result = msgQueueResponses.escribir(dbResponse);
+        if (result < 0) {
+            Logger::logger().log("DatabaseManager: Error writing response");
+        }
+        return -1;
+    }
 
     entryRow_t entryRow = dbQuery.entryRow;
     Persona persona = Persona(entryRow.nombre, entryRow.direccion, entryRow.telefono);
@@ -61,7 +78,20 @@ int DatabaseManager::save(dbQuery_t dbQuery) {
 
     dbResponse_t dbResponse;
     dbResponse.mtype = dbQuery.mtype;
-    dbResponse.result = 0;
+    dbResponse.result = ResponseTypeOK;
+
+    int result = msgQueueResponses.escribir(dbResponse);
+    if (result < 0) {
+        Logger::logger().log("DatabaseManager: Error writing response");
+        return -1;
+    }
+
+    return 0;
+}
+
+int DatabaseManager::retrieveByName(dbQuery_t dbQuery) {
+    Logger::logger().log("DatabaseManager Retrieving for client " + to_string(dbQuery.mtype));
+    dbResponse_t dbResponse = retrieveQuery(dbQuery);
 
     int result = msgQueueResponses.escribir(dbResponse);
     if (result < 0) {
@@ -72,13 +102,10 @@ int DatabaseManager::save(dbQuery_t dbQuery) {
     return 0;
 }
 
-int DatabaseManager::retrieve(dbQuery_t dbQuery) {
-    Logger::logger().log("DatabaseManager Retrieving for client " + to_string(dbQuery.mtype));
-
+dbResponse_t DatabaseManager::retrieveQuery(dbQuery_t &dbQuery) {
     dbResponse_t dbResponse;
     dbResponse.mtype = dbQuery.mtype;
-    dbResponse.result = -1;
-
+    dbResponse.result = ResponseTypeOK;
     string line;
     string nombreRetrieve = string(dbQuery.nombre);
     MixedUtils::padTo(nombreRetrieve, NOMBRE_SIZE - 1);
@@ -87,18 +114,11 @@ int DatabaseManager::retrieve(dbQuery_t dbQuery) {
         while (getline(persistenceFile, line)) {
             if (line.compare(0, NOMBRE_SIZE - 1, nombreRetrieve) == 0) {
                 strcpy(dbResponse.value, line.c_str());
-                dbResponse.result = 0;
+                dbResponse.result = ResponseTypeAlreadyExists;
                 break;
             }
         }
         persistenceFile.close();
     }
-
-    int result = msgQueueResponses.escribir(dbResponse);
-    if (result < 0) {
-        Logger::logger().log("DatabaseManager Response Error");
-        return -1;
-    }
-
-    return 0;
+    return dbResponse;
 }

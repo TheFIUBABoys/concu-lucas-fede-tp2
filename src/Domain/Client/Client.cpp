@@ -3,6 +3,7 @@
 //
 
 #include "Client.h"
+#include "../../Exception/DBException/DBException.h"
 
 Client::Client() : Process() {
     try {
@@ -10,7 +11,7 @@ Client::Client() : Process() {
         msgQueueResponses = Cola<dbResponse_t>(MSG_QUEUE_RESPONSES_NAME, 'a');
         clientId = getpid();
         Logger::logger().log("Client " + to_string(clientId) + " Initialized");
-    }catch (MessageQueueException e){
+    } catch (MessageQueueException e) {
         Logger::logger().log("Error initializing client:  " + to_string(clientId) + e.what());
     }
 }
@@ -25,11 +26,11 @@ entryRow_t entryRowFromPersona(Persona &persona) {
     return entryRow;
 }
 
-int Client::save(Persona &persona) {
+ClientResponse Client::save(Persona &persona) {
     Logger::logger().log("Client " + to_string(clientId) + " Saving");
 
     if (!checkDBManager())
-        return -1;
+        return ClientResponseError;
 
     dbQuery_t dbQuery;
     dbQuery.mtype = clientId;
@@ -39,31 +40,40 @@ int Client::save(Persona &persona) {
     int result = msgQueueQueries.escribir(dbQuery);
     if (result < 0) {
         Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Query");
-        return -1;
+        return ClientResponseError;
     }
 
     dbResponse_t dbResponse;
     result = msgQueueResponses.leer(clientId, &dbResponse);
     if (result < 0) {
         Logger::logger().log("Client " + to_string(clientId) + " Error Saving/Response");
-        return -1;
+        return ClientResponseError;
     }
 
-    if (dbResponse.result < 0)
-        Logger::logger().log("Client " + to_string(clientId) + " Error Saving/DB");
-    else
-        Logger::logger().log("Client " + to_string(clientId) + " Saving Successful");
-
-    return 0;
+    if (dbResponse.result == ResponseTypeError) {
+        string message = "Client " + to_string(clientId) + " Error Saving/DB";
+        Logger::logger().log(message);
+        return ClientResponseError;
+    } else {
+        if (dbResponse.result == ResponseTypeAlreadyExists) {
+            string message = "Client " + to_string(clientId) + " tried to save repeated persona";
+            Logger::logger().log(message);
+            return ClientResponseRepeated;
+        } else {
+            Logger::logger().log("Client " + to_string(clientId) + " Saving Successful");
+        }
+    }
+    return ClientResponseOK;
 }
 
 Persona Client::getByName(string name) {
     Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name);
 
-    Persona personaError = Persona("Err", "Err", "Err");
-
-    if (!checkDBManager())
-        return personaError;
+    if (!checkDBManager()) {
+        string message = "DBManager is offline";
+        Logger::logger().log(message);
+        throw DBException(message.c_str());
+    }
 
     dbQuery_t dbQuery;
     dbQuery.mtype = clientId;
@@ -72,39 +82,31 @@ Persona Client::getByName(string name) {
 
     int result = msgQueueQueries.escribir(dbQuery);
     if (result < 0) {
-        Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/Query");
-        return Persona("Err", "Err", "Err");
+        string message = "Client " + to_string(clientId) + " Error Writing query to message queue";
+        Logger::logger().log(message);
+        throw DBException(message.c_str());
     }
 
     dbResponse_t dbResponse;
     result = msgQueueResponses.leer(clientId, &dbResponse);
     if (result < 0) {
-        Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/Response");
-        return Persona("Err", "Err", "Err");
+        string message = "Client " + to_string(clientId) + " Error reading response from message queue";
+        Logger::logger().log(message);
+        throw DBException(message.c_str());
     }
 
-    if (dbResponse.result < 0)
-        Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/DB");
-    else {
+    if (dbResponse.result == ResponseTypeError) {
+        string message = "Client " + to_string(clientId) + " response came with an error";
+        Logger::logger().log(message);
+        throw DBException(message.c_str());
+    } else {
         Logger::logger().log("Client " + to_string(clientId) + " Retrieve Successful");
         Persona persona = Persona::buildFromString(dbResponse.value);
         Logger::logger().log("Client " + to_string(clientId) + " Retrieve " + persona.getStringRepresentation());
         return persona;
     }
-
-    return Persona("Err", "Err", "Err");
-}
-
-//Throws InvalidParamsException if name is invalid
-Persona Client::personaWithName(string &name) {
-    return Persona(name, "", "");
 }
 
 bool Client::checkDBManager() {
-    if (!msgQueueQueries.creadoCorrectamente() || !msgQueueResponses.creadoCorrectamente()) {
-        Logger::logger().log("Client " + to_string(clientId) + " - Error: el DB Manager no esta levantado ");
-        return false;
-    }
-
-    return true;
+    return !(!msgQueueQueries.creadoCorrectamente() || !msgQueueResponses.creadoCorrectamente());
 }

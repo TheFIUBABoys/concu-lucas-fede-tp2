@@ -22,9 +22,10 @@ private:
     Cola<dbQuery_t> msgQueueQueries;
     Cola<dbResponse_t> msgQueueResponses;
     int save(dbQuery_t dbQuery);
-    int retrieve(dbQuery_t dbQuery);
+    int retrieveByName(dbQuery_t dbQuery);
 
     void deleteTempfiles();
+    dbResponse_t retrieveQuery(dbQuery_t &dbQuery);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_DATABASEMANAGER_H

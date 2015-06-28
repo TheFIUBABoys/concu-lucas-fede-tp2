@@ -15,10 +15,16 @@
 #include "../../Util/Cola/Cola.h"
 #include "../Persona/Persona.h"
 
+typedef enum ClientResponse{
+    ClientResponseOK,
+    ClientResponseError,
+    ClientResponseRepeated
+
+} ClientResponse;
 class Client : Process {
 public:
     Client();
-    int save(Persona& persona);
+    ClientResponse save(Persona& persona);
     Persona getByName(string name);
 
 private:
@@ -26,7 +32,6 @@ private:
     Cola<dbResponse_t> msgQueueResponses;
     int clientId;
     bool checkDBManager();
-    Persona personaWithName(string &name);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_CLIENT_H
