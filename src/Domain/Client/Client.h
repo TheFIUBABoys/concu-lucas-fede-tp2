@@ -29,12 +29,14 @@ public:
     ClientResponse save(Persona& persona);
     Persona getByName(string name);
 
+    void handleSignal(int signum);
+
 private:
     Cola<dbQuery_t> msgQueueQueries;
     Cola<dbResponse_t> msgQueueResponses;
     int clientId;
+    bool shouldQuit;
     bool checkDBManager();
-    int handleSignal(int signum);
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_CLIENT_H

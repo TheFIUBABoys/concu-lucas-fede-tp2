@@ -28,36 +28,48 @@ void createTempfiles() {
 bool testSave(Client &client) {
     Logger::logger().debug = false;
     remove(PERSISTENCE_FILE);   // Reset persistence
-    Persona persona1 = Persona("Foo", "Avenida del Foo", "3-14159-2653");
-    client.save(persona1);
-    string line;
-    ifstream persistenceFile(PERSISTENCE_FILE);
-    getline(persistenceFile, line);
-    Persona persona2 = Persona::buildFromString(line);
-    Logger::logger().debug = true;
-    return (persona1 == persona2);
+    try {
+        Persona persona1 = Persona("Foo", "Avenida del Foo", "3-14159-2653");
+        client.save(persona1);
+        string line;
+        ifstream persistenceFile(PERSISTENCE_FILE);
+        getline(persistenceFile, line);
+        Persona persona2 = Persona::buildFromString(line);
+        Logger::logger().debug = true;
+        return (persona1 == persona2);
+    } catch (DBException e) {
+        return false;
+    }
 }
 
 
 bool testSaveWithSameName(Client &client) {
-    Logger::logger().debug = false;
-    remove(PERSISTENCE_FILE);   // Reset persistence
-    Persona persona1 = Persona("Foo", "Avenida del Foo", "3-14159-2653");
-    client.save(persona1);
-    Persona persona2 = Persona("Foo", "Avenidaasd del Foo", "3-149-2653");
-    ClientResponse response = client.save(persona2);
-    Logger::logger().debug = true;
-    return response == ClientResponseRepeated;
+    try {
+        Logger::logger().debug = false;
+        remove(PERSISTENCE_FILE);   // Reset persistence
+        Persona persona1 = Persona("Foo", "Avenida del Foo", "3-14159-2653");
+        client.save(persona1);
+        Persona persona2 = Persona("Foo", "Avenidaasd del Foo", "3-149-2653");
+        ClientResponse response = client.save(persona2);
+        Logger::logger().debug = true;
+        return response == ClientResponseRepeated;
+    } catch (DBException e) {
+        return false;
+    }
 }
 
 bool testRetrieve(Client &client) {
-    Logger::logger().debug = false;
-    remove(PERSISTENCE_FILE);   // Reset persistence
-    Persona persona1 = Persona("Foo", "Avenida del Foo", "3-1459-2653");
-    client.save(persona1);
-    Persona personaRetrieved = client.getByName(persona1.getNombre());
-    Logger::logger().debug = true;
-    return (persona1 == personaRetrieved);
+    try {
+        Logger::logger().debug = false;
+        remove(PERSISTENCE_FILE);   // Reset persistence
+        Persona persona1 = Persona("Foo", "Avenida del Foo", "3-1459-2653");
+        client.save(persona1);
+        Persona personaRetrieved = client.getByName(persona1.getNombre());
+        Logger::logger().debug = true;
+        return (persona1 == personaRetrieved);
+    } catch (DBException e) {
+        return false;
+    }
 }
 
 bool testRetrieveNotFound(Client &client) {
@@ -65,7 +77,7 @@ bool testRetrieveNotFound(Client &client) {
     remove(PERSISTENCE_FILE);   // Reset persistence
     Persona persona1 = Persona("Foo", "Avenida del Foo", "3-1459-2653");
     try {
-        Persona personaRetrieved = client.getByName(persona1.getNombre());
+        client.getByName(persona1.getNombre());
         Logger::logger().debug = true;
         return false;
     } catch (DBException e) {
@@ -75,60 +87,73 @@ bool testRetrieveNotFound(Client &client) {
 }
 
 bool testBulkSaveAndRetrieve(Client &client) {
-    Logger::logger().debug = false;
-    remove(PERSISTENCE_FILE);   // Reset persistence
-    vector<Persona> v;
-    for (int i = 0; i < 1000; i++) {
-        Persona persona1 = Persona("Foo" + to_string(i), "Avenida del Foo", "3-14159-2653");
-        v.push_back(persona1);
-        client.save(persona1);
-    }
-    bool success = true;
-    for (int i = 0; i < 1000; i++) {
-        Persona personaRetrieved = client.getByName("Foo" + to_string(i));
-        if (v[i] != personaRetrieved) {
-            Logger::logger().debug = true;
-            Logger::logger().log("Error comparing Personas");
-            Logger::logger().log(v[i].getStringRepresentation());
-            Logger::logger().log(personaRetrieved.getStringRepresentation());
-            success = false;
-            break;
+    try {
+        Logger::logger().debug = false;
+        remove(PERSISTENCE_FILE);   // Reset persistence
+        vector<Persona> v;
+        for (int i = 0; i < 1000; i++) {
+            Persona persona1 = Persona("Foo" + to_string(i), "Avenida del Foo", "3-14159-2653");
+            v.push_back(persona1);
+            client.save(persona1);
         }
+        bool success = true;
+        for (int i = 0; i < 1000; i++) {
+            Persona personaRetrieved = client.getByName("Foo" + to_string(i));
+            if (v[i] != personaRetrieved) {
+                Logger::logger().debug = true;
+                Logger::logger().log("Error comparing Personas");
+                Logger::logger().log(v[i].getStringRepresentation());
+                Logger::logger().log(personaRetrieved.getStringRepresentation());
+                success = false;
+                break;
+            }
+        }
+        Logger::logger().debug = true;
+        return success;
+    } catch (DBException e) {
+        return false;
     }
-    Logger::logger().debug = true;
-    return success;
 }
 
 ConcurrentTestResult testConcurrentSaves() {
-    Logger::logger().debug = false;
-    remove(PERSISTENCE_FILE);   // Reset persistence
+    try {
+        Logger::logger().debug = false;
+        remove(PERSISTENCE_FILE);   // Reset persistence
 
-    int processes = 100;
-    for (int i = 0; i < processes; i++) {
-        __pid_t pid = fork();
-        if (pid == 0) {
+        int processes = 100;
+        for (int i = 0; i < processes; i++) {
+            __pid_t pid = fork();
+            if (pid == 0) {
+                try {
+                    Client client = Client();
+                    Persona persona1 = Persona("Foo" + to_string(i), "Avenida del Foo" + to_string(i), to_string(i));
+                    client.save(persona1);
+                    return ConcurrentTestResultChild;
+                } catch (DBException e) {
+                    return ConcurrentTestResultChild;
+                }
+            }
+        }
+        for (int i = 0; i < processes; i++) {
+            Logger::logger().log("ASD");
+            wait(NULL);
+        }
+
+        bool success = true;
+        for (int i = 0; i < processes; i++) {
             Client client = Client();
-            Persona persona1 = Persona("Foo" + to_string(i), "Avenida del Foo" + to_string(i), to_string(i));
-            client.save(persona1);
-            return ConcurrentTestResultChild;
+            try {
+                client.getByName("Foo" + to_string(i));
+            } catch (DBException e) {
+                success = false;
+                break;
+            }
         }
+        Logger::logger().debug = true;
+        return success ? ConcurrentTestResultOK : ConcurrentTestResultError;
+    } catch (DBException e) {
+        return ConcurrentTestResultError;
     }
-    for (int i = 0; i < processes; i++) {
-        wait(NULL);
-    }
-
-    bool success = true;
-    for (int i = 0; i < processes; i++) {
-        Client client = Client();
-        try{
-            client.getByName("Foo" + to_string(i));
-        }catch(DBException e){
-            success = false;
-            break;
-        }
-    }
-    Logger::logger().debug = true;
-    return success ? ConcurrentTestResultOK : ConcurrentTestResultError;
 }
 
 
@@ -179,12 +204,12 @@ int main() {
                 "TEST BULK RETRIEVE FAILED");
         ConcurrentTestResult concurrentTestResult = testConcurrentSaves();
 
-        if (concurrentTestResult==ConcurrentTestResultOK){
+        if (concurrentTestResult == ConcurrentTestResultOK) {
             Logger::logger().log("TEST CONCURRENT SAVES OK");
-        }else{
-            if (concurrentTestResult==ConcurrentTestResultError){
+        } else {
+            if (concurrentTestResult == ConcurrentTestResultError) {
                 Logger::logger().log("TEST CONCURRENT SAVES FAILED");
-            }else{
+            } else {
                 //Childs
                 return 0;
             }
@@ -192,10 +217,12 @@ int main() {
         Logger::logger().log("Exiting client");
     } else {
         // Se crea el Database Manager
-        Logger::logger().debug = false;
+
         createTempfiles();
         DatabaseManager dbManager = DatabaseManager();
+        Logger::logger().debug = false;
         dbManager.start();
+        Logger::logger().debug = true;
         Logger::logger().log("Exiting server");
     }
     return 0;

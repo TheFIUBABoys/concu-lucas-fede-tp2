@@ -36,16 +36,17 @@ template<class T>
 Cola<T>::Cola(const std::string &archivo, const char letra) {
     this->clave = ftok(archivo.c_str(), letra);
     if (this->clave == -1)
-        throw MessageQueueException("Error en ftok");
-
+        throw MessageQueueException((string("Error en ftok: ")+ string(strerror(errno))).c_str());
     this->id = msgget(this->clave, 0666 | IPC_CREAT);
     if (this->id == -1)
-        throw MessageQueueException("Error en msgget");
+        throw MessageQueueException((string("Error en msgget: ")+ string(strerror(errno))).c_str());
+
 }
 
 //To avoid initialization errors
 template<class T>
 Cola<T>::Cola() {
+    this->clave = -1;
 }
 
 template<class T>
@@ -62,7 +63,7 @@ template<class T>
 int Cola<T>::escribir(const T &dato) const {
     int resultado = msgsnd(this->id, static_cast<const void *>(&dato), sizeof(T) - sizeof(long), 0);
     if (resultado < 0)
-        throw MessageQueueException("Error al escribir cola");
+        throw MessageQueueException((string("Error al escribir cola: ")+ string(strerror(errno))).c_str());
     return resultado;
 }
 
