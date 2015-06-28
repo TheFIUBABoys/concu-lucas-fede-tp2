@@ -5,38 +5,12 @@
 #include "Client.h"
 
 Client::Client() : Process() {
-    if (clientIdShMem.crear(SHARED_MEM_CLIENT_ID, 'L') != SHM_OK){
-        string error = "Error creating Client Id Shared Mem";
-        perror(error.c_str());
-        Logger::logger().log(error);
-    }
-
-    clientIdLock.tomarLockWr();
-    clientId = clientIdShMem.leer();
-    clientIdShMem.escribir(clientId + 1);
-    clientIdLock.liberarLock();
-
+    clientId = getpid();
     Logger::logger().log("Client " + to_string(clientId) + " Initialized");
 }
 
-void Client::start() {
-    Logger::logger().log("Client " + to_string(clientId) + " Running");
 
-    /*Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
-    Persona persona2 = Persona("Bar","Avenida del Bar","2-7182-8182");
-
-    save(persona1);
-    save(persona2);
-
-    getByName( persona1.getNombre() );
-    getByName( persona2.getNombre() );*/
-
-    // GracefulQuit
-    Logger::logger().log("Client " + to_string(clientId) + " Quit");
-}
-
-
-entryRow_t entryRowFromPersona(Persona& persona){
+entryRow_t entryRowFromPersona(Persona &persona) {
     entryRow_t entryRow;
     strcpy(entryRow.direccion, persona.getDireccion().c_str());
     strcpy(entryRow.nombre, persona.getNombre().c_str());
@@ -45,10 +19,10 @@ entryRow_t entryRowFromPersona(Persona& persona){
     return entryRow;
 }
 
-int Client::save(Persona& persona) {
+int Client::save(Persona &persona) {
     Logger::logger().log("Client " + to_string(clientId) + " Saving");
 
-    if (checkDBManager() == false)
+    if (!checkDBManager())
         return -1;
 
     dbQuery_t dbQuery;
@@ -78,11 +52,11 @@ int Client::save(Persona& persona) {
 }
 
 Persona Client::getByName(string name) {
-    Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name );
+    Logger::logger().log("Client " + to_string(clientId) + " Retrieving name " + name);
 
-    Persona personaError = Persona("Err","Err","Err");
+    Persona personaError = Persona("Err", "Err", "Err");
 
-    if (checkDBManager() == false)
+    if (!checkDBManager())
         return personaError;
 
     dbQuery_t dbQuery;
@@ -93,25 +67,26 @@ Persona Client::getByName(string name) {
     int result = msgQueueQueries.escribir(dbQuery);
     if (result < 0) {
         Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/Query");
-        return Persona("Err","Err","Err");
+        return Persona("Err", "Err", "Err");
     }
 
     dbResponse_t dbResponse;
     result = msgQueueResponses.leer(clientId, &dbResponse);
     if (result < 0) {
         Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/Response");
-        return Persona("Err","Err","Err");
+        return Persona("Err", "Err", "Err");
     }
 
     if (dbResponse.result < 0)
         Logger::logger().log("Client " + to_string(clientId) + " Error Retrieving/DB");
     else {
         Logger::logger().log("Client " + to_string(clientId) + " Retrieve Successful");
-        Logger::logger().log("Client " + to_string(clientId) + " Retrieve " + dbResponse.value);
-        return Persona::buildFromString(dbResponse.value);
+        Persona persona = Persona::buildFromString(dbResponse.value);
+        Logger::logger().log("Client " + to_string(clientId) + " Retrieve " + persona.getStringRepresentation());
+        return persona;
     }
 
-    return Persona("Err","Err","Err");
+    return Persona("Err", "Err", "Err");
 }
 
 //Throws InvalidParamsException if name is invalid
@@ -120,7 +95,7 @@ Persona Client::personaWithName(string &name) {
 }
 
 bool Client::checkDBManager() {
-    if (msgQueueQueries.creadoCorrectamente() == false || msgQueueResponses.creadoCorrectamente() == false) {
+    if (!msgQueueQueries.creadoCorrectamente() || !msgQueueResponses.creadoCorrectamente()) {
         Logger::logger().log("Client " + to_string(clientId) + " - Error: el DB Manager no esta levantado ");
         return false;
     }

@@ -12,7 +12,6 @@
 #include "../Process/Process.h"
 #include "../../Util/Logger/Logger.h"
 #include "../../Util/Cola/Cola.h"
-#include "../../Util/MemoriaCompartida/MemoriaCompartida.h"
 #include "../../Util/MixedUtils.h"
 
 class DatabaseManager : Process {
@@ -22,10 +21,10 @@ public:
 private:
     Cola<dbQuery_t> msgQueueQueries = Cola<dbQuery_t>(MSG_QUEUE_QUERIES_NAME, 'a' );
     Cola<dbResponse_t> msgQueueResponses = Cola<dbResponse_t>(MSG_QUEUE_RESPONSES_NAME, 'a' );
-    MemoriaCompartida<int> clientIdShMem;
-    void deleteTempfiles();
     int save(dbQuery_t dbQuery);
     int retrieve(dbQuery_t dbQuery);
+
+    void deleteTempfiles();
 };
 
 #endif //CONCU_LUCAS_FEDE_TP2_DATABASEMANAGER_H

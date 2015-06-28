@@ -8,8 +8,7 @@
 #define LOG_FILE    "log.txt"
 #define MSG_QUEUE_QUERIES_NAME "/tmp/MsgQueueQueries"
 #define MSG_QUEUE_RESPONSES_NAME "/tmp/MsgQueueResponses"
-#define SHARED_MEM_CLIENT_ID "/tmp/SharedMemClientId"
-#define PERSISTENCE_FILE    "PersistenceFile.txt"
+#define PERSISTENCE_FILE    "database.txt"
 
 #include <string>
 

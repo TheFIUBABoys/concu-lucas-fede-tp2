@@ -11,36 +11,28 @@ void createTempfiles() {//Creating temp lock files
     myfile.close();
     myfile.open(MSG_QUEUE_RESPONSES_NAME);
     myfile.close();
-    myfile.open(SHARED_MEM_CLIENT_ID);
     myfile.close();
 }
 
+
 bool testSave(Client &client) {
     remove(PERSISTENCE_FILE);   // Reset persistence
-
     Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
-
     client.save(persona1);
-
     string line;
     ifstream persistenceFile(PERSISTENCE_FILE);
     getline(persistenceFile, line);
-
-    return (persona1.getStringRepresentation().compare(line) == 0);
+    Persona persona2 = Persona::buildFromString(line);
+    return (persona1 == persona2);
 }
 
 bool testRetrieve(Client &client) {
     remove(PERSISTENCE_FILE);   // Reset persistence
-
     Persona persona1 = Persona("Foo","Avenida del Foo","3-14159-2653");
-
     client.save(persona1);
-
     Persona personaRetrieved = client.getByName(persona1.getNombre());
-
-    return (persona1.getStringRepresentation().compare( personaRetrieved.getStringRepresentation() ) == 0);
+    return (persona1 == personaRetrieved);
 }
-
 
 int main() {
     if (fork() == 0) {
@@ -48,18 +40,12 @@ int main() {
         Client client = Client();
         testSave(client) ? Logger::logger().log("TEST SAVE OK") : Logger::logger().log("TEST SAVE FAILED");
         testRetrieve(client) ? Logger::logger().log("TEST RETRIEVE OK") : Logger::logger().log("TEST RETRIEVE FAILED");
-
-        client.start();
-
         Logger::logger().log("Exiting client");
-
     } else {
         createTempfiles();
-
         DatabaseManager dbManager = DatabaseManager();
         dbManager.start();
         Logger::logger().log("Exiting server");
-
     }
 
     return 0;

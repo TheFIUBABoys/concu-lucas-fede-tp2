@@ -22,6 +22,14 @@ public:
     string getDireccion();
     string getTelefono();
     string getStringRepresentation();
+    friend bool operator==(const Persona &lhs, const Persona &rhs) {
+        return (lhs.nombre == rhs.nombre) && (lhs.direccion == rhs.direccion) && (lhs.telefono == rhs.telefono);
+    }
+
+    friend bool operator!=(const Persona &lhs, const Persona &rhs) {
+        return (lhs.nombre != rhs.nombre) || (lhs.direccion != rhs.direccion) || (lhs.telefono != rhs.telefono);
+
+    }
 private:
     string nombre, direccion, telefono;
 };

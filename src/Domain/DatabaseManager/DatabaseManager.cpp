@@ -6,14 +6,6 @@
 
 DatabaseManager::DatabaseManager() : Process() {
     Logger::logger().log("DatabaseManager Initialized with pid " + to_string(getpid()));
-
-    if (clientIdShMem.crear(SHARED_MEM_CLIENT_ID, 'L') != SHM_OK){
-        string error = "Error creating Client Id Shared Mem";
-        perror(error.c_str());
-        Logger::logger().log(error);
-    }
-
-    clientIdShMem.escribir(1);
 }
 
 void DatabaseManager::start() {
@@ -22,15 +14,18 @@ void DatabaseManager::start() {
     dbQuery_t dbQuery;
     while(!sigint_handler.getGracefulQuit()) {
         int resultado = msgQueueQueries.leer(0, &dbQuery);
-        if (resultado < 0)
+        if (resultado < 0){
+            Logger::logger().log("DatabaseManager read EOF");
             break;
-
+        }
         switch (dbQuery.action){
             case SAVE:
                 save(dbQuery);
                 break;
             case RETRIEVE:
                 retrieve(dbQuery);
+                break;
+            default:
                 break;
         }
     }
@@ -39,15 +34,12 @@ void DatabaseManager::start() {
     Logger::logger().log("DatabaseManager Quit");
     msgQueueQueries.destruir();
     msgQueueResponses.destruir();
-    clientIdShMem.liberar();
-
     deleteTempfiles();
 }
 
 void DatabaseManager::deleteTempfiles() {//Creating temp lock files
     remove(MSG_QUEUE_QUERIES_NAME);
     remove(MSG_QUEUE_RESPONSES_NAME);
-    remove(SHARED_MEM_CLIENT_ID);
 }
 
 int DatabaseManager::save(dbQuery_t dbQuery) {
