@@ -35,7 +35,7 @@ typedef struct dbQuery {
 
 typedef struct dbResponse {
     long mtype;
-    char value[NOMBRE_SIZE + DIRECCION_SIZE + TELEFONO_SIZE];
+    entryRow_t entryRow;
     ResponseType result;
 } dbResponse_t;
 

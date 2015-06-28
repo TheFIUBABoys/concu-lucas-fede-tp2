@@ -146,6 +146,7 @@ int main() {
         testBulkSaveAndRetrieve(client) ? Logger::logger().log("TEST BULK RETRIEVE OK") : Logger::logger().log(
                 "TEST BULK RETRIEVE FAILED");
         ConcurrentTestResult concurrentTestResult = testConcurrentSaves();
+
         if (concurrentTestResult==ConcurrentTestResultOK){
             Logger::logger().log("TEST CONCURRENT SAVES OK");
         }else{
@@ -158,6 +159,7 @@ int main() {
         }
         Logger::logger().log("Exiting client");
     } else {
+        // Se crea el Database Manager
         Logger::logger().debug = false;
         createTempfiles();
         DatabaseManager dbManager = DatabaseManager();

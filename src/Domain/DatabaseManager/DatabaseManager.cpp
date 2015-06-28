@@ -59,7 +59,7 @@ int DatabaseManager::save(dbQuery_t dbQuery) {
         Logger::logger().log("DatabaseManager attempted to insert repeated entry");
         dbResponse_t dbResponse;
         dbResponse.mtype = dbQuery.mtype;
-        strcpy(dbResponse.value, retrieveResult.value);
+        dbResponse.entryRow = retrieveResult.entryRow;
         dbResponse.result = ResponseTypeAlreadyExists;
         int result = msgQueueResponses.escribir(dbResponse);
         if (result < 0) {
@@ -106,14 +106,14 @@ dbResponse_t DatabaseManager::retrieveQuery(dbQuery_t &dbQuery, bool isInsert) {
     dbResponse_t dbResponse;
     dbResponse.mtype = dbQuery.mtype;
     dbResponse.result = ResponseTypeError;
+
     string line;
-    string nombreRetrieve = string(dbQuery.nombre);
-    MixedUtils::padTo(nombreRetrieve, NOMBRE_SIZE - 1);
     ifstream persistenceFile(PERSISTENCE_FILE);
     if (persistenceFile.is_open()) {
         while (getline(persistenceFile, line)) {
-            if (line.compare(0, NOMBRE_SIZE - 1, nombreRetrieve) == 0) {
-                strcpy(dbResponse.value, line.c_str());
+            Persona persona = Persona::buildFromString(line);
+            if (dbQuery.nombre == persona.getNombre()) {
+                dbResponse.entryRow = persona.getEntryRow();
                 if (isInsert) {
                     dbResponse.result = ResponseTypeAlreadyExists;
                 } else {

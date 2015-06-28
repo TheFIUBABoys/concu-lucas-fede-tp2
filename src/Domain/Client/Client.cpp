@@ -16,16 +16,6 @@ Client::Client() : Process() {
     }
 }
 
-
-entryRow_t entryRowFromPersona(Persona &persona) {
-    entryRow_t entryRow;
-    strcpy(entryRow.direccion, persona.getDireccion().c_str());
-    strcpy(entryRow.nombre, persona.getNombre().c_str());
-    strcpy(entryRow.telefono, persona.getTelefono().c_str());
-
-    return entryRow;
-}
-
 ClientResponse Client::save(Persona &persona) {
     Logger::logger().log("Client " + to_string(clientId) + " Saving");
 
@@ -34,7 +24,7 @@ ClientResponse Client::save(Persona &persona) {
 
     dbQuery_t dbQuery;
     dbQuery.mtype = clientId;
-    dbQuery.entryRow = entryRowFromPersona(persona);
+    dbQuery.entryRow = persona.getEntryRow();
     dbQuery.action = SAVE;
 
     int result = msgQueueQueries.escribir(dbQuery);
@@ -101,7 +91,7 @@ Persona Client::getByName(string name) {
         throw DBException(message.c_str());
     } else {
         Logger::logger().log("Client " + to_string(clientId) + " Retrieve Successful");
-        Persona persona = Persona::buildFromString(dbResponse.value);
+        Persona persona = Persona(dbResponse.entryRow);
         Logger::logger().log("Client " + to_string(clientId) + " Retrieve " + persona.getStringRepresentation());
         return persona;
     }

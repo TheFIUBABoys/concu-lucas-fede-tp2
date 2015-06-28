@@ -2,6 +2,8 @@
 // Created by lucas on 6/14/15.
 //
 
+#include <string.h>
+#include <iostream>
 #include "Persona.h"
 
 #define MAX_NOMBRE 61
@@ -50,26 +52,36 @@ Persona::Persona(string nombre, string direccion, string telefono) {
     setTelefono(telefono);
 }
 
+Persona::Persona(entryRow_t entryRow) {
+    setNombre(entryRow.nombre);
+    setDireccion(entryRow.direccion);
+    setTelefono(entryRow.telefono);
+}
+
 string Persona::getStringRepresentation() {
     string nombreTmp = string(this->nombre);
     string direccionTmp = string(this->direccion);
     string telefonoTmp = string(this->telefono);
-    MixedUtils::padTo(nombreTmp, NOMBRE_SIZE - 1);
-    MixedUtils::padTo(direccionTmp, DIRECCION_SIZE - 1);
-    MixedUtils::padTo(telefonoTmp, TELEFONO_SIZE - 1);
 
-    return nombreTmp + direccionTmp + telefonoTmp;
+    return this->nombre + SEPARATOR_CHARACTER + this->direccion + SEPARATOR_CHARACTER + this->telefono;
 }
 
 Persona Persona::buildFromString(string data) {
-    string nombre = data.substr(0, NOMBRE_SIZE - 1);
-    string direccion = data.substr(NOMBRE_SIZE - 1, DIRECCION_SIZE - 1);
-    string telefono = data.substr(NOMBRE_SIZE + DIRECCION_SIZE - 2, TELEFONO_SIZE - 1);
+    size_t indexNombre = data.find(SEPARATOR_CHARACTER, 0);
+    size_t indexDireccion = data.find(SEPARATOR_CHARACTER, indexNombre + 1);
 
-    nombre = MixedUtils::rtrim(nombre);
-    direccion = MixedUtils::rtrim(direccion);
-    telefono = MixedUtils::rtrim(telefono);
+    string nombre = data.substr(0, indexNombre);
+    string direccion = data.substr(indexNombre + 1, indexDireccion - indexNombre - 1);
+    string telefono = data.substr(indexDireccion + 1);
 
     return Persona(nombre, direccion, telefono);
 }
 
+entryRow_t Persona::getEntryRow() {
+    entryRow_t entryRow;
+    strcpy(entryRow.direccion, getDireccion().c_str());
+    strcpy(entryRow.nombre, getNombre().c_str());
+    strcpy(entryRow.telefono, getTelefono().c_str());
+
+    return entryRow;
+}
